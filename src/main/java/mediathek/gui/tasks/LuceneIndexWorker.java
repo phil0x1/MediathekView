@@ -119,7 +119,7 @@ public class LuceneIndexWorker extends SwingWorker<Void, Void> {
     private @NotNull Language getFilmLanguage(@NotNull DatenFilm film) {
         Language res;
         switch (film.getSender()) {
-            case "ARTE.DE" -> res = Language.GERMAN;
+            case "ARTE.DE", "Funk.net", "KiKA", "Radio Bremen TV", "PHOENIX" -> res = Language.GERMAN;
             case "ARTE.EN" -> res = Language.ENGLISH;
             case "ARTE.ES" -> res = Language.SPANISH;
             case "ARTE.FR" -> res = Language.FRENCH;
