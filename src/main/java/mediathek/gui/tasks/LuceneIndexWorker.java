@@ -100,8 +100,7 @@ public class LuceneIndexWorker extends SwingWorker<Void, Void> {
         doc.add(new IntPoint(LuceneIndexKeys.FILM_LENGTH, film.getFilmLength()));
         doc.add(new IntPoint(LuceneIndexKeys.FILM_SIZE, film.getFileSize().toInteger()));
 
-        final var description = film.getDescription();
-        doc.add(new TextField(LuceneIndexKeys.BESCHREIBUNG, description, Field.Store.NO));
+        doc.add(new TextField(LuceneIndexKeys.BESCHREIBUNG, film.getDescription(), Field.Store.NO));
         doc.add(new StringField(LuceneIndexKeys.LIVESTREAM, Boolean.toString(film.isLivestream()), Field.Store.NO));
         doc.add(new StringField(LuceneIndexKeys.HIGH_QUALITY, Boolean.toString(film.isHighQuality()), Field.Store.NO));
         doc.add(new StringField(LuceneIndexKeys.SUBTITLE, Boolean.toString(film.hasSubtitle() || film.hasBurnedInSubtitles()), Field.Store.NO));
