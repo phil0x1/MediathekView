@@ -62,4 +62,8 @@ public class LuceneIndexKeys {
      * Filmgröße in Megabytes. Integer-Value. 0 wenn nicht vorhanden.
      */
     public static final String FILM_SIZE = "größe";
+    /**
+     * Vermutliche Sprache des Films basierend auf der Beschreibung
+     */
+    public static final String FILM_LANGUAGE = "sprache";
 }

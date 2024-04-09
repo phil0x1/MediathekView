@@ -1,10 +1,14 @@
 package mediathek.gui.tasks;
 
+import com.github.pemistahl.lingua.api.Language;
+import com.github.pemistahl.lingua.api.LanguageDetector;
+import com.github.pemistahl.lingua.api.LanguageDetectorBuilder;
 import com.google.common.base.Stopwatch;
 import mediathek.config.Daten;
 import mediathek.daten.DatenFilm;
 import mediathek.daten.IndexedFilmList;
 import mediathek.mainwindow.MediathekGui;
+import mediathek.tool.ApplicationConfiguration;
 import mediathek.tool.SwingErrorDialog;
 import mediathek.tool.datum.DateUtil;
 import org.apache.logging.log4j.LogManager;
@@ -17,16 +21,33 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.io.IOException;
+import java.util.Optional;
 
 public class LuceneIndexWorker extends SwingWorker<Void, Void> {
     private static final Logger logger = LogManager.getLogger();
     private final JProgressBar progressBar;
     private final JLabel progLabel;
     private int oldProgress = 0;
+    private Optional<LanguageDetector> languageDetector = Optional.empty();
+
 
     public LuceneIndexWorker(@NotNull JLabel progLabel, @NotNull JProgressBar progressBar) {
         this.progressBar = progressBar;
         this.progLabel = progLabel;
+
+        //FIXME false by default!
+        var config = ApplicationConfiguration.getConfiguration();
+        if (config.getBoolean(ApplicationConfiguration.LUCENE_DETECT_LANGUAGE, true)) {
+            //FIXME disable more unused languages
+            var detector = LanguageDetectorBuilder
+                    .fromAllLanguagesWithout(Language.LATIN, Language.ZULU, Language.XHOSA)
+                    .withPreloadedLanguageModels();
+            if (config.getBoolean(ApplicationConfiguration.LUCENE_LANGUAGE_DETECTOR_LOW_ACCURACY, true)) {
+                    detector.withLowAccuracyMode();
+            }
+
+            languageDetector = Optional.of(detector.build());
+        }
 
         SwingUtilities.invokeLater(() -> {
             final var ui = MediathekGui.ui();
@@ -50,13 +71,27 @@ public class LuceneIndexWorker extends SwingWorker<Void, Void> {
         doc.add(new IntPoint(LuceneIndexKeys.FILM_LENGTH, film.getFilmLength()));
         doc.add(new IntPoint(LuceneIndexKeys.FILM_SIZE, film.getFileSize().toInteger()));
 
-        doc.add(new TextField(LuceneIndexKeys.BESCHREIBUNG, film.getDescription(), Field.Store.NO));
+        final var description = film.getDescription();
+        doc.add(new TextField(LuceneIndexKeys.BESCHREIBUNG, description, Field.Store.NO));
         doc.add(new StringField(LuceneIndexKeys.LIVESTREAM, Boolean.toString(film.isLivestream()), Field.Store.NO));
         doc.add(new StringField(LuceneIndexKeys.HIGH_QUALITY, Boolean.toString(film.isHighQuality()), Field.Store.NO));
         doc.add(new StringField(LuceneIndexKeys.SUBTITLE, Boolean.toString(film.hasSubtitle() || film.hasBurnedInSubtitles()), Field.Store.NO));
         doc.add(new StringField(LuceneIndexKeys.TRAILER_TEASER, Boolean.toString(film.isTrailerTeaser()), Field.Store.NO));
         doc.add(new StringField(LuceneIndexKeys.AUDIOVERSION, Boolean.toString(film.isAudioVersion()), Field.Store.NO));
         doc.add(new StringField(LuceneIndexKeys.SIGN_LANGUAGE, Boolean.toString(film.isSignLanguage()), Field.Store.NO));
+        languageDetector.ifPresent(detector -> {
+            Language res;
+            switch (film.getSender()) {
+                case "ARTE.DE" -> res = Language.GERMAN;
+                case "ARTE.EN" -> res = Language.ENGLISH;
+                case "ARTE.ES" -> res = Language.SPANISH;
+                case "ARTE.FR" -> res = Language.FRENCH;
+                case "ARTE.IT" -> res = Language.ITALIAN;
+                case "ARTE.PL" -> res = Language.POLISH;
+                default -> res =/*detector.detectLanguageOf(description);*/ Language.GERMAN;
+            }
+            doc.add(new StringField(LuceneIndexKeys.FILM_LANGUAGE, res.getIsoCode639_1().toString(), Field.Store.NO));
+        });
 
         addSendeDatum(doc, film);
 
