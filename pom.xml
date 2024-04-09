@@ -84,7 +84,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <jdk.language.version>22</jdk.language.version>
+        <jdk.language.version>21</jdk.language.version>
         <kotlin.language.target>21</kotlin.language.target>
         <kotlin.version>1.9.23</kotlin.version>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
@@ -483,17 +483,21 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>com.github.pemistahl</groupId>
-            <artifactId>lingua</artifactId>
-            <version>1.2.2</version>
+            <groupId>it.unimi.dsi</groupId>
+            <artifactId>fastutil</artifactId>
+            <version>8.5.13</version>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.moshi</groupId>
+            <artifactId>moshi</artifactId>
+            <version>1.15.1</version>
             <exclusions>
-                <exclusion>
-                    <groupId>org.jetbrains.kotlin</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
+            <exclusion>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>*</artifactId>
+            </exclusion>
             </exclusions>
         </dependency>
-
         <dependency>
             <groupId>airsquared</groupId>
             <artifactId>JMacNotification</artifactId>

@@ -21,14 +21,13 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.io.IOException;
-import java.util.Optional;
 
 public class LuceneIndexWorker extends SwingWorker<Void, Void> {
     private static final Logger logger = LogManager.getLogger();
     private final JProgressBar progressBar;
     private final JLabel progLabel;
     private int oldProgress = 0;
-    private Optional<LanguageDetector> languageDetector = Optional.empty();
+    LanguageDetector languageDetector;
 
 
     public LuceneIndexWorker(@NotNull JLabel progLabel, @NotNull JProgressBar progressBar) {
@@ -39,14 +38,44 @@ public class LuceneIndexWorker extends SwingWorker<Void, Void> {
         var config = ApplicationConfiguration.getConfiguration();
         if (config.getBoolean(ApplicationConfiguration.LUCENE_DETECT_LANGUAGE, true)) {
             //FIXME disable more unused languages
-            var detector = LanguageDetectorBuilder
-                    .fromAllLanguagesWithout(Language.LATIN, Language.ZULU, Language.XHOSA)
-                    .withPreloadedLanguageModels();
-            if (config.getBoolean(ApplicationConfiguration.LUCENE_LANGUAGE_DETECTOR_LOW_ACCURACY, true)) {
-                    detector.withLowAccuracyMode();
-            }
-
-            languageDetector = Optional.of(detector.build());
+            languageDetector = LanguageDetectorBuilder
+                    .fromAllLanguagesWithout(Language.LATIN,
+                            Language.AMHARIC,
+                            Language.BENGALI,
+                            Language.BOKMAL,
+                            Language.CHINESE,
+                            Language.ESPERANTO,
+                            Language.GANDA,
+                            Language.GUJARATI,
+                            Language.INDONESIAN,
+                            Language.IRISH,
+                            Language.JAPANESE,
+                            Language.KAZAKH,
+                            Language.KOREAN,
+                            Language.MALAY,
+                            Language.MAORI,
+                            Language.MARATHI,
+                            Language.MONGOLIAN,
+                            Language.OROMO,
+                            Language.PUNJABI,
+                            Language.SHONA,
+                            Language.SINHALA,
+                            Language.SOMALI,
+                            Language.SOTHO,
+                            Language.SWAHILI,
+                            Language.TAGALOG,
+                            Language.TAMIL,
+                            Language.TELUGU,
+                            Language.TSONGA,
+                            Language.TIGRINYA,
+                            Language.TSWANA,
+                            Language.URDU,
+                            Language.VIETNAMESE,
+                            Language.WELSH,
+                            Language.XHOSA,
+                            Language.ZULU)
+                    .withPreloadedLanguageModels()
+                    .withLowAccuracyMode().build();
         }
 
         SwingUtilities.invokeLater(() -> {
@@ -79,23 +108,26 @@ public class LuceneIndexWorker extends SwingWorker<Void, Void> {
         doc.add(new StringField(LuceneIndexKeys.TRAILER_TEASER, Boolean.toString(film.isTrailerTeaser()), Field.Store.NO));
         doc.add(new StringField(LuceneIndexKeys.AUDIOVERSION, Boolean.toString(film.isAudioVersion()), Field.Store.NO));
         doc.add(new StringField(LuceneIndexKeys.SIGN_LANGUAGE, Boolean.toString(film.isSignLanguage()), Field.Store.NO));
-        languageDetector.ifPresent(detector -> {
-            Language res;
-            switch (film.getSender()) {
-                case "ARTE.DE" -> res = Language.GERMAN;
-                case "ARTE.EN" -> res = Language.ENGLISH;
-                case "ARTE.ES" -> res = Language.SPANISH;
-                case "ARTE.FR" -> res = Language.FRENCH;
-                case "ARTE.IT" -> res = Language.ITALIAN;
-                case "ARTE.PL" -> res = Language.POLISH;
-                default -> res =/*detector.detectLanguageOf(description);*/ Language.GERMAN;
-            }
-            doc.add(new StringField(LuceneIndexKeys.FILM_LANGUAGE, res.getIsoCode639_1().toString(), Field.Store.NO));
-        });
+        final Language res = getFilmLanguage(film);
+        doc.add(new StringField(LuceneIndexKeys.FILM_LANGUAGE, res.getIsoCode639_1().toString(), Field.Store.NO));
 
         addSendeDatum(doc, film);
 
         writer.addDocument(doc);
+    }
+
+    private @NotNull Language getFilmLanguage(@NotNull DatenFilm film) {
+        Language res;
+        switch (film.getSender()) {
+            case "ARTE.DE" -> res = Language.GERMAN;
+            case "ARTE.EN" -> res = Language.ENGLISH;
+            case "ARTE.ES" -> res = Language.SPANISH;
+            case "ARTE.FR" -> res = Language.FRENCH;
+            case "ARTE.IT" -> res = Language.ITALIAN;
+            case "ARTE.PL" -> res = Language.POLISH;
+            default -> res = languageDetector.detectLanguageOf(film.getDescription());// Language.GERMAN;
+        }
+        return res;
     }
 
     private void addSendeDatum(@NotNull Document doc, @NotNull DatenFilm film) {
