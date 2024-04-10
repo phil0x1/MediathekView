@@ -421,6 +421,11 @@ public class DatenFilm implements Comparable<DatenFilm> {
 
     private void setLanguageForSpecificSenders()
     {
+        if (isLivestream()) {
+            language = Language.GERMAN;
+            return;
+        }
+
         switch (sender) {
             case "ARTE.DE", "Funk.net", "KiKA", "Radio Bremen TV", "PHOENIX" -> language = Language.GERMAN;
             case "ARTE.EN" -> language = Language.ENGLISH;

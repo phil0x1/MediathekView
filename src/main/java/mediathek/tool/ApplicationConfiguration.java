@@ -31,7 +31,6 @@ public class ApplicationConfiguration {
 
     public static final String APPLICATION_USE_MODERN_SEARCH = "application.use.modern_search";
     public static final String LUCENE_DETECT_LANGUAGE = "application.lucene.language.detect";
-    public static final String LUCENE_LANGUAGE_DETECTOR_LOW_ACCURACY = "application.lucene.language.low_accuracy";
 
     public static final String APPLICATION_INSTALL_TAB_SWITCH_LISTENER =
             "application.ui.install_tab_listeners";

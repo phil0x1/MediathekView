@@ -369,7 +369,19 @@ public class FilmListReader implements AutoCloseable {
             }
         }
 
-        var languageDetector = LanguageDetectorBuilder
+        //FIXME make default false
+        if (ApplicationConfiguration.getConfiguration().getBoolean(ApplicationConfiguration.LUCENE_DETECT_LANGUAGE, true)) {
+            logger.trace("Starting language detection");
+            detectLanguages(listeFilme);
+            logger.trace("Language detection done");
+        }
+        else {
+            logger.trace("Skipping language detection");
+        }
+    }
+
+    private void detectLanguages(@NotNull ListeFilme listeFilme) {
+        final var languageDetector = LanguageDetectorBuilder
                 .fromAllLanguagesWithout(Language.LATIN,
                         Language.AMHARIC,
                         Language.BENGALI,
@@ -407,15 +419,12 @@ public class FilmListReader implements AutoCloseable {
                         Language.ZULU)
                 .withPreloadedLanguageModels()
                 .withLowAccuracyMode().build();
-        logger.trace("Starting language detection");
         Stopwatch watch = Stopwatch.createStarted();
-        // language detection here
         listeFilme.parallelStream().filter(f -> f.getLanguage() == Language.UNKNOWN).forEach(f -> {
             f.setLanguage(languageDetector.detectLanguageOf(f.getDescription()));
         });
         watch.stop();
         logger.trace("Language detection took {}", watch);
-        logger.trace("Language detection done");
         languageDetector.unloadLanguageModels();
     }
 
