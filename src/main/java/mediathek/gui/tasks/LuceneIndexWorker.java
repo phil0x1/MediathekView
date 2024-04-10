@@ -107,26 +107,11 @@ public class LuceneIndexWorker extends SwingWorker<Void, Void> {
         doc.add(new StringField(LuceneIndexKeys.TRAILER_TEASER, Boolean.toString(film.isTrailerTeaser()), Field.Store.NO));
         doc.add(new StringField(LuceneIndexKeys.AUDIOVERSION, Boolean.toString(film.isAudioVersion()), Field.Store.NO));
         doc.add(new StringField(LuceneIndexKeys.SIGN_LANGUAGE, Boolean.toString(film.isSignLanguage()), Field.Store.NO));
-        final Language res = getFilmLanguage(film);
-        doc.add(new StringField(LuceneIndexKeys.FILM_LANGUAGE, res.getIsoCode639_1().toString(), Field.Store.NO));
+        doc.add(new StringField(LuceneIndexKeys.FILM_LANGUAGE, film.language.toString(), Field.Store.NO));
 
         addSendeDatum(doc, film);
 
         writer.addDocument(doc);
-    }
-
-    private @NotNull Language getFilmLanguage(@NotNull DatenFilm film) {
-        Language res;
-        switch (film.getSender()) {
-            case "ARTE.DE", "Funk.net", "KiKA", "Radio Bremen TV", "PHOENIX" -> res = Language.GERMAN;
-            case "ARTE.EN" -> res = Language.ENGLISH;
-            case "ARTE.ES" -> res = Language.SPANISH;
-            case "ARTE.FR" -> res = Language.FRENCH;
-            case "ARTE.IT" -> res = Language.ITALIAN;
-            case "ARTE.PL" -> res = Language.POLISH;
-            default -> res = languageDetector.detectLanguageOf(film.getDescription());// Language.GERMAN;
-        }
-        return res;
     }
 
     private void addSendeDatum(@NotNull Document doc, @NotNull DatenFilm film) {
@@ -191,6 +176,8 @@ public class LuceneIndexWorker extends SwingWorker<Void, Void> {
 
     @Override
     protected void done() {
+        languageDetector.unloadLanguageModels();
+
         final var ui = MediathekGui.ui();
         ui.toggleBlacklistAction.setEnabled(true);
         ui.editBlacklistAction.setEnabled(true);

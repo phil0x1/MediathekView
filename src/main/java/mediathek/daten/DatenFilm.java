@@ -1,5 +1,6 @@
 package mediathek.daten;
 
+import com.github.pemistahl.lingua.api.Language;
 import mediathek.daten.abo.DatenAbo;
 import mediathek.javafx.bookmark.BookmarkData;
 import mediathek.tool.FileSize;
@@ -72,6 +73,10 @@ public class DatenFilm implements Comparable<DatenFilm> {
     private String datum = "";
     private String sendeZeit = "";
     /**
+     * Film language based on description.
+     */
+    public Language language;
+    /**
      * film duration or film length in seconds.
      */
     private int filmLength;
@@ -93,6 +98,7 @@ public class DatenFilm implements Comparable<DatenFilm> {
         this.datum = other.datum;
         this.sendeZeit = other.sendeZeit;
         this.filmLength = other.filmLength;
+        this.language = other.language;
     }
 
     /**
@@ -401,6 +407,20 @@ public class DatenFilm implements Comparable<DatenFilm> {
 
     public void init() {
         setDatum();
+        setLanguageForSpecificSenders();
+    }
+
+    private void setLanguageForSpecificSenders()
+    {
+        switch (sender) {
+            case "ARTE.DE", "Funk.net", "KiKA", "Radio Bremen TV", "PHOENIX" -> language = Language.GERMAN;
+            case "ARTE.EN" -> language = Language.ENGLISH;
+            case "ARTE.ES" -> language = Language.SPANISH;
+            case "ARTE.FR" -> language = Language.FRENCH;
+            case "ARTE.IT" -> language = Language.ITALIAN;
+            case "ARTE.PL" -> language = Language.POLISH;
+            default -> language = Language.UNKNOWN;
+            }
     }
 
     /**

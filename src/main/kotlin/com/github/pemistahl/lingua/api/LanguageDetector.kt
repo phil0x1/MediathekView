@@ -32,8 +32,6 @@ import com.github.pemistahl.lingua.internal.util.extension.incrementCounter
 import com.github.pemistahl.lingua.internal.util.extension.isLogogram
 import it.unimi.dsi.fastutil.objects.Object2FloatMap
 import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap
-import java.security.AccessController
-import java.security.PrivilegedAction
 import java.util.*
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
@@ -104,7 +102,7 @@ class LanguageDetector internal constructor(
      * @param text The input text to detect the language for.
      * @return A map of all possible languages, sorted by their confidence value in descending order.
      */
-    fun computeLanguageConfidenceValues(text: String): SortedMap<Language, Double> {
+    private fun computeLanguageConfidenceValues(text: String): SortedMap<Language, Double> {
         val values = TreeMap<Language, Double>()
         val cleanedUpText = cleanUpInputText(text)
 
@@ -141,30 +139,26 @@ class LanguageDetector internal constructor(
         val tasks =
             ngramSizeRange.filter { i -> cleanedUpText.length >= i }.map { i ->
                 Callable {
-                    AccessController.doPrivileged(
-                        PrivilegedAction {
-                            val testDataModel = TestDataLanguageModel.fromText(cleanedUpText, ngramLength = i)
-                            val probabilities = computeLanguageProbabilities(testDataModel, filteredLanguages)
+                    val testDataModel = TestDataLanguageModel.fromText(cleanedUpText, ngramLength = i)
+                    val probabilities = computeLanguageProbabilities(testDataModel, filteredLanguages)
 
-                            val unigramCounts =
-                                if (i == 1) {
-                                    val languages = probabilities.keys
-                                    val unigramFilteredLanguages =
-                                        if (languages.isNotEmpty()) {
-                                            filteredLanguages.asSequence()
-                                                .filter { languages.contains(it) }
-                                                .toSet()
-                                        } else {
-                                            filteredLanguages
-                                        }
-                                    countUnigramsOfInputText(testDataModel, unigramFilteredLanguages)
+                    val unigramCounts =
+                        if (i == 1) {
+                            val languages = probabilities.keys
+                            val unigramFilteredLanguages =
+                                if (languages.isNotEmpty()) {
+                                    filteredLanguages.asSequence()
+                                        .filter { languages.contains(it) }
+                                        .toSet()
                                 } else {
-                                    null
+                                    filteredLanguages
                                 }
+                            countUnigramsOfInputText(testDataModel, unigramFilteredLanguages)
+                        } else {
+                            null
+                        }
 
-                            Pair(probabilities, unigramCounts)
-                        },
-                    )
+                    Pair(probabilities, unigramCounts)
                 }
             }
 
@@ -229,14 +223,14 @@ class LanguageDetector internal constructor(
         }
     }
 
-    internal fun cleanUpInputText(text: String): String {
+    private fun cleanUpInputText(text: String): String {
         return text.trim().lowercase()
             .replace(PUNCTUATION, "")
             .replace(NUMBERS, "")
             .replace(MULTIPLE_WHITESPACE, " ")
     }
 
-    internal fun splitTextIntoWords(text: String): List<String> {
+    private fun splitTextIntoWords(text: String): List<String> {
         val words = mutableListOf<String>()
         var nextWordStart = 0
         for (i in text.indices) {
@@ -263,7 +257,7 @@ class LanguageDetector internal constructor(
         return words
     }
 
-    internal fun countUnigramsOfInputText(
+    private fun countUnigramsOfInputText(
         unigramLanguageModel: TestDataLanguageModel,
         filteredLanguages: Set<Language>,
     ): Map<Language, Int> {
@@ -279,7 +273,7 @@ class LanguageDetector internal constructor(
         return unigramCounts
     }
 
-    internal fun sumUpProbabilities(
+    private fun sumUpProbabilities(
         probabilities: List<Map<Language, Float>>,
         unigramCountsOfInputText: Map<Language, Int>,
         filteredLanguages: Set<Language>,
@@ -380,11 +374,11 @@ class LanguageDetector internal constructor(
         }
     }
 
-    internal fun filterLanguagesByRules(words: List<String>): Set<Language> {
+    private fun filterLanguagesByRules(words: List<String>): Set<Language> {
         val detectedAlphabets = mutableMapOf<Alphabet, Int>()
 
         for (word in words) {
-            for (alphabet in Alphabet.values()) {
+            for (alphabet in Alphabet.entries) {
                 if (alphabet.matches(word)) {
                     detectedAlphabets.incrementCounter(alphabet)
                     break
@@ -431,7 +425,7 @@ class LanguageDetector internal constructor(
         }
     }
 
-    internal fun computeLanguageProbabilities(
+    private fun computeLanguageProbabilities(
         testDataModel: TestDataLanguageModel,
         filteredLanguages: Set<Language>,
     ): Map<Language, Float> {
@@ -442,7 +436,7 @@ class LanguageDetector internal constructor(
         return probabilities.filter { it.value < 0.0 }
     }
 
-    internal fun computeSumOfNgramProbabilities(
+    private fun computeSumOfNgramProbabilities(
         language: Language,
         ngrams: Set<Ngram>,
     ): Float {
@@ -460,7 +454,7 @@ class LanguageDetector internal constructor(
         return probabilitiesSum
     }
 
-    internal fun lookUpNgramProbability(
+    private fun lookUpNgramProbability(
         language: Language,
         ngram: Ngram,
     ): Float {
