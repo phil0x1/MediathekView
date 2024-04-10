@@ -36,6 +36,7 @@ import java.security.AccessController
 import java.security.PrivilegedAction
 import java.util.*
 import java.util.concurrent.Callable
+import java.util.concurrent.Executors
 import java.util.concurrent.ForkJoinPool
 import kotlin.math.ln
 
@@ -49,6 +50,7 @@ class LanguageDetector internal constructor(
     internal val isLowAccuracyModeEnabled: Boolean,
     internal val numberOfLoadedLanguages: Int = languages.size,
 ) {
+    private val executor = Executors.newVirtualThreadPerTaskExecutor()
     private val languagesWithUniqueCharacters = languages.filterNot { it.uniqueCharacters.isNullOrBlank() }.asSequence()
     private val oneLanguageAlphabets =
         Alphabet.allSupportingExactlyOneLanguage().filterValues {
@@ -166,7 +168,7 @@ class LanguageDetector internal constructor(
                 }
             }
 
-        val allProbabilitiesAndUnigramCounts = ForkJoinPool.commonPool().invokeAll(tasks).map { it.get() }
+        val allProbabilitiesAndUnigramCounts = executor.invokeAll(tasks).map { it.get() }
         val allProbabilities = allProbabilitiesAndUnigramCounts.map { (probabilities, _) -> probabilities }
         val unigramCounts = allProbabilitiesAndUnigramCounts[0].second ?: emptyMap()
         val summedUpProbabilities = sumUpProbabilities(allProbabilities, unigramCounts, filteredLanguages)
@@ -493,7 +495,7 @@ class LanguageDetector internal constructor(
             }
         }
 
-        ForkJoinPool.commonPool().invokeAll(tasks).forEach { it.get() }
+        executor.invokeAll(tasks).forEach { it.get() }
     }
 
     override fun equals(other: Any?) =
