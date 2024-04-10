@@ -72,10 +72,19 @@ public class DatenFilm implements Comparable<DatenFilm> {
     private String titel = "";
     private String datum = "";
     private String sendeZeit = "";
+
+    public Language getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(Language language) {
+        this.language = language;
+    }
+
     /**
      * Film language based on description.
      */
-    public Language language;
+    private Language language;
     /**
      * film duration or film length in seconds.
      */
