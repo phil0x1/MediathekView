@@ -3,6 +3,9 @@ package mediathek.filmlisten.reader;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
+import com.github.pemistahl.lingua.api.Language;
+import com.github.pemistahl.lingua.api.LanguageDetectorBuilder;
+import com.google.common.base.Stopwatch;
 import mediathek.config.Config;
 import mediathek.config.Konstanten;
 import mediathek.controller.SenderFilmlistLoadApprover;
@@ -365,6 +368,55 @@ public class FilmListReader implements AutoCloseable {
                 dateFilter.filter(datenFilm);
             }
         }
+
+        var languageDetector = LanguageDetectorBuilder
+                .fromAllLanguagesWithout(Language.LATIN,
+                        Language.AMHARIC,
+                        Language.BENGALI,
+                        Language.BOKMAL,
+                        Language.CHINESE,
+                        Language.ESPERANTO,
+                        Language.GANDA,
+                        Language.GUJARATI,
+                        Language.INDONESIAN,
+                        Language.IRISH,
+                        Language.JAPANESE,
+                        Language.KAZAKH,
+                        Language.KOREAN,
+                        Language.MALAY,
+                        Language.MAORI,
+                        Language.MARATHI,
+                        Language.MONGOLIAN,
+                        Language.OROMO,
+                        Language.PUNJABI,
+                        Language.SHONA,
+                        Language.SINHALA,
+                        Language.SOMALI,
+                        Language.SOTHO,
+                        Language.SWAHILI,
+                        Language.TAGALOG,
+                        Language.TAMIL,
+                        Language.TELUGU,
+                        Language.TSONGA,
+                        Language.TIGRINYA,
+                        Language.TSWANA,
+                        Language.URDU,
+                        Language.VIETNAMESE,
+                        Language.WELSH,
+                        Language.XHOSA,
+                        Language.ZULU)
+                .withPreloadedLanguageModels()
+                .withLowAccuracyMode().build();
+        logger.trace("Starting language detection");
+        Stopwatch watch = Stopwatch.createStarted();
+        // language detection here
+        listeFilme.parallelStream().filter(f -> f.getLanguage() == Language.UNKNOWN).forEach(f -> {
+            f.setLanguage(languageDetector.detectLanguageOf(f.getDescription()));
+        });
+        watch.stop();
+        logger.trace("Language detection took {}", watch);
+        logger.trace("Language detection done");
+        languageDetector.unloadLanguageModels();
     }
 
     /**

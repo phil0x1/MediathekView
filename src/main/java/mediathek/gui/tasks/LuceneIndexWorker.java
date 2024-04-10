@@ -1,8 +1,5 @@
 package mediathek.gui.tasks;
 
-import com.github.pemistahl.lingua.api.Language;
-import com.github.pemistahl.lingua.api.LanguageDetector;
-import com.github.pemistahl.lingua.api.LanguageDetectorBuilder;
 import com.google.common.base.Stopwatch;
 import mediathek.config.Daten;
 import mediathek.daten.DatenFilm;
@@ -27,7 +24,6 @@ public class LuceneIndexWorker extends SwingWorker<Void, Void> {
     private final JProgressBar progressBar;
     private final JLabel progLabel;
     private int oldProgress = 0;
-    LanguageDetector languageDetector;
 
 
     public LuceneIndexWorker(@NotNull JLabel progLabel, @NotNull JProgressBar progressBar) {
@@ -38,44 +34,7 @@ public class LuceneIndexWorker extends SwingWorker<Void, Void> {
         var config = ApplicationConfiguration.getConfiguration();
         if (config.getBoolean(ApplicationConfiguration.LUCENE_DETECT_LANGUAGE, true)) {
             //FIXME disable more unused languages
-            languageDetector = LanguageDetectorBuilder
-                    .fromAllLanguagesWithout(Language.LATIN,
-                            Language.AMHARIC,
-                            Language.BENGALI,
-                            Language.BOKMAL,
-                            Language.CHINESE,
-                            Language.ESPERANTO,
-                            Language.GANDA,
-                            Language.GUJARATI,
-                            Language.INDONESIAN,
-                            Language.IRISH,
-                            Language.JAPANESE,
-                            Language.KAZAKH,
-                            Language.KOREAN,
-                            Language.MALAY,
-                            Language.MAORI,
-                            Language.MARATHI,
-                            Language.MONGOLIAN,
-                            Language.OROMO,
-                            Language.PUNJABI,
-                            Language.SHONA,
-                            Language.SINHALA,
-                            Language.SOMALI,
-                            Language.SOTHO,
-                            Language.SWAHILI,
-                            Language.TAGALOG,
-                            Language.TAMIL,
-                            Language.TELUGU,
-                            Language.TSONGA,
-                            Language.TIGRINYA,
-                            Language.TSWANA,
-                            Language.URDU,
-                            Language.VIETNAMESE,
-                            Language.WELSH,
-                            Language.XHOSA,
-                            Language.ZULU)
-                    .withPreloadedLanguageModels()
-                    .withLowAccuracyMode().build();
+
         }
 
         SwingUtilities.invokeLater(() -> {
@@ -176,8 +135,6 @@ public class LuceneIndexWorker extends SwingWorker<Void, Void> {
 
     @Override
     protected void done() {
-        languageDetector.unloadLanguageModels();
-
         final var ui = MediathekGui.ui();
         ui.toggleBlacklistAction.setEnabled(true);
         ui.editBlacklistAction.setEnabled(true);
