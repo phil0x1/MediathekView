@@ -121,8 +121,7 @@ public class FilmListReader implements AutoCloseable {
             for (var geoItem : split) {
                 try {
                     datenFilm.countrySet.add(Country.valueOf(geoItem));
-                }
-                catch (IllegalArgumentException ex) {
+                } catch (IllegalArgumentException ex) {
                     logger.error("Unable to parse string {} to Country enum", geoItem);
                 }
             }
@@ -374,13 +373,13 @@ public class FilmListReader implements AutoCloseable {
             logger.trace("Starting language detection");
             detectLanguages(listeFilme);
             logger.trace("Language detection done");
-        }
-        else {
+        } else {
             logger.trace("Skipping language detection");
         }
     }
 
     private void detectLanguages(@NotNull ListeFilme listeFilme) {
+        Stopwatch watch;
         final var languageDetector = LanguageDetectorBuilder
                 .fromAllLanguagesWithout(Language.LATIN,
                         Language.AMHARIC,
@@ -419,13 +418,13 @@ public class FilmListReader implements AutoCloseable {
                         Language.ZULU)
                 .withPreloadedLanguageModels()
                 .withLowAccuracyMode().build();
-        Stopwatch watch = Stopwatch.createStarted();
+        watch = Stopwatch.createStarted();
         listeFilme.parallelStream().filter(f -> f.getLanguage() == Language.UNKNOWN).forEach(f -> {
             f.setLanguage(languageDetector.detectLanguageOf(f.getDescription()));
         });
         watch.stop();
-        logger.trace("Language detection took {}", watch);
         languageDetector.unloadLanguageModels();
+        logger.trace("Language detection took {}", watch);
     }
 
     /**
@@ -452,8 +451,8 @@ public class FilmListReader implements AutoCloseable {
             notifyStart(source); // für die Progressanzeige
 
             if (source.startsWith("http")) {
-                    final var sourceUrl = new URI(source);
-                    processFromWeb(sourceUrl.toURL(), listeFilme);
+                final var sourceUrl = new URI(source);
+                processFromWeb(sourceUrl.toURL(), listeFilme);
             } else
                 processFromFile(source, listeFilme);
 
@@ -497,11 +496,10 @@ public class FilmListReader implements AutoCloseable {
         }
     }
 
-    private String buildClientInfo()
-    {
+    private String buildClientInfo() {
         List<Object> clientData = Arrays.asList(Konstanten.PROGRAMMNAME, Konstanten.MVVERSION, SystemUtils.OS_ARCH,
                 SystemUtils.OS_NAME, SystemUtils.OS_VERSION);
-        return clientData.stream().map( Object::toString ).collect( Collectors.joining( "," ) );
+        return clientData.stream().map(Object::toString).collect(Collectors.joining(","));
     }
 
     /**
